@@ -356,7 +356,10 @@ impl App {
                 }
                 let selected_agent = self.agent_picker_selected_thread();
                 let monitor_changed = !self.side_threads.contains_key(&thread_id)
-                    && self.agent_navigation.monitor.observe(thread_id, &notification);
+                    && self
+                        .agent_navigation
+                        .monitor
+                        .observe(thread_id, &notification);
                 let result = if self.primary_thread_id == Some(thread_id)
                     || self.primary_thread_id.is_none()
                 {

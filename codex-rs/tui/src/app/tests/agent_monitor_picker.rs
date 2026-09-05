@@ -4,6 +4,10 @@ use pretty_assertions::assert_eq;
 #[tokio::test]
 async fn monitor_picker_updates_tokens_and_completion_without_reopening() -> Result<()> {
     let (mut app, mut events, _ops) = Box::pin(make_test_app_with_channels()).await;
+    let server = Box::pin(crate::start_embedded_app_server_for_picker(
+        app.chat_widget.config_ref(),
+    ))
+    .await?;
     let main = ThreadId::from_string("00000000-0000-0000-0000-000000000100")?;
     let worker = ThreadId::from_string("00000000-0000-0000-0000-000000000101")?;
     app.primary_thread_id = Some(main);
@@ -11,26 +15,36 @@ async fn monitor_picker_updates_tokens_and_completion_without_reopening() -> Res
     app.agent_navigation.upsert(main, None, None, false);
     app.agent_navigation
         .upsert(worker, Some("Worker".to_string()), None, false);
-    app.agent_navigation
-        .monitor
-        .observe(worker, &turn_started_notification(worker, "one"));
+    app.thread_event_channels
+        .insert(worker, ThreadEventChannel::new(16));
+    app.handle_app_server_event(
+        &server,
+        codex_app_server_client::AppServerEvent::ServerNotification(Box::new(
+            turn_started_notification(worker, "one"),
+        )),
+    )
+    .await;
     let params = app.agent_picker_selection_view_params(Some(1));
     app.chat_widget.show_selection_view(params);
-    let selected = app.agent_picker_selected_thread();
-    app.agent_navigation
-        .monitor
-        .observe(worker, &token_usage_notification(worker, "one", None));
-    app.repaint_agent_picker(selected);
+    app.handle_app_server_event(
+        &server,
+        codex_app_server_client::AppServerEvent::ServerNotification(Box::new(
+            token_usage_notification(worker, "one", None),
+        )),
+    )
+    .await;
     let live = render_bottom_popup(&app.chat_widget, 100);
     assert!(live.contains("Running"));
     assert!(live.contains("10 tokens"));
     insta::assert_snapshot!("live_agent_monitor", live);
     assert_eq!(app.agent_picker_selected_thread(), Some(worker));
-    app.agent_navigation.monitor.observe(
-        worker,
-        &turn_completed_notification(worker, "one", TurnStatus::Completed),
-    );
-    app.repaint_agent_picker(selected);
+    app.handle_app_server_event(
+        &server,
+        codex_app_server_client::AppServerEvent::ServerNotification(Box::new(
+            turn_completed_notification(worker, "one", TurnStatus::Completed),
+        )),
+    )
+    .await;
     let folded = render_bottom_popup(&app.chat_widget, 100);
     assert!(folded.contains("Show completed (1)"));
     assert!(!folded.contains("Worker"));

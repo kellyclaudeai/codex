@@ -23,10 +23,11 @@ Use the repository's current Rust toolchain. The Rust workspace also expects
 the CLI with:
 
 ```sh
-cargo build -p codex-cli
+cargo build -p codex-cli -p codex-code-mode-host
 ```
 
-Run the resulting development binary with:
+Building the companion host preserves Code Mode support as well. Run the
+resulting development binary with:
 
 ```sh
 target/debug/codex
@@ -46,7 +47,11 @@ just test -p codex-tui
 ```
 
 The command uses the repository's configured test runner and is the relevant
-check for the monitor UI.
+check for the monitor UI. Targeted checks can use:
+
+```sh
+just test -p codex-tui -E 'test(agent_monitor) | test(agent_picker)'
+```
 
 New children spawned during the connection stream updates without needing to
 select them first. Historical descendants discovered on reopening a session may
@@ -62,3 +67,13 @@ and TUI test command. Review the resulting diff before sharing a binary or
 opening a pull request. Distribution should identify the exact fork revision
 and make clear that the monitor is custom until an upstream implementation is
 accepted.
+
+## Validation
+
+On macOS arm64, the modified TUI suite ran 4,295 tests: 4,284 passed and 11
+failed, with 6 skipped. All seven added monitor tests passed. The unchanged
+upstream base (`e01f38c`) reproduced exactly the same 11 keyboard/cursor and
+related UI failures. Those baseline snapshots were not changed by this patch.
+The new coverage includes event-handler-driven updates while the picker is
+open, cumulative token replacement, stale completion handling, safe tool
+labels, completion folding, transcript selection, and narrow rendering.

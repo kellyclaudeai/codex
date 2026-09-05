@@ -165,7 +165,10 @@ impl App {
         SelectionViewParams {
             view_id: Some(AGENT_PICKER_VIEW_ID),
             title: Some("Subagents".to_string()),
-            subtitle: Some(format!("Live activity. {}", AgentNavigationState::picker_subtitle())),
+            subtitle: Some(format!(
+                "Live activity. {}",
+                AgentNavigationState::picker_subtitle()
+            )),
             footer_note: Some(
                 "Tokens are cumulative usage reported by the server."
                     .dim()

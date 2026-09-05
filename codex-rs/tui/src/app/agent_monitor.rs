@@ -89,7 +89,10 @@ impl AgentMonitorState {
         let entry = self.entries.entry(thread_id).or_default();
         if !entry.observed_live {
             entry.status = Some(status_from_thread(&thread.status));
-            if matches!(thread.status, ThreadStatus::Active { .. } | ThreadStatus::SystemError) {
+            if matches!(
+                thread.status,
+                ThreadStatus::Active { .. } | ThreadStatus::SystemError
+            ) {
                 entry.latest_turn_result = None;
             } else if let Some(result) = thread
                 .turns
@@ -129,7 +132,10 @@ impl AgentMonitorState {
             ServerNotification::ThreadStatusChanged(changed) => {
                 entry.observed_live = true;
                 entry.status = Some(status_from_thread(&changed.status));
-                if matches!(&changed.status, ThreadStatus::Active { .. } | ThreadStatus::SystemError) {
+                if matches!(
+                    &changed.status,
+                    ThreadStatus::Active { .. } | ThreadStatus::SystemError
+                ) {
                     entry.latest_turn_result = None;
                 }
             }
@@ -318,7 +324,13 @@ fn bounded_label(value: &str) -> Option<String> {
     if value.is_empty() {
         return None;
     }
-    Some(value.chars().take(MAX_LABEL_CHARS).map(|ch| if ch.is_control() { ' ' } else { ch }).collect())
+    Some(
+        value
+            .chars()
+            .take(MAX_LABEL_CHARS)
+            .map(|ch| if ch.is_control() { ' ' } else { ch })
+            .collect(),
+    )
 }
 
 fn bounded_id(value: &str) -> u64 {

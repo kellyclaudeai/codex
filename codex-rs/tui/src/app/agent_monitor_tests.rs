@@ -152,21 +152,43 @@ fn monitor_description_snapshot() {
 fn resumed_agent_is_visible_and_ignores_previous_turn_completion() {
     let id = thread_id();
     let mut state = AgentMonitorState::default();
-    state.observe(id, &ServerNotification::TurnCompleted(TurnCompletedNotification {
-        thread_id: id.to_string(), turn: turn(TurnStatus::Completed),
-    }));
+    state.observe(
+        id,
+        &ServerNotification::TurnCompleted(TurnCompletedNotification {
+            thread_id: id.to_string(),
+            turn: turn(TurnStatus::Completed),
+        }),
+    );
     let mut next = turn(TurnStatus::InProgress);
     next.id = "turn-2".to_string();
-    state.observe(id, &ServerNotification::TurnStarted(codex_app_server_protocol::TurnStartedNotification {
-        thread_id: id.to_string(), turn: next,
-    }));
-    state.observe(id, &ServerNotification::TurnCompleted(TurnCompletedNotification {
-        thread_id: id.to_string(), turn: turn(TurnStatus::Completed),
-    }));
-    assert_eq!(state.describe(id, false, true).status, AgentMonitorStatus::Running);
+    state.observe(
+        id,
+        &ServerNotification::TurnStarted(codex_app_server_protocol::TurnStartedNotification {
+            thread_id: id.to_string(),
+            turn: next,
+        }),
+    );
+    state.observe(
+        id,
+        &ServerNotification::TurnCompleted(TurnCompletedNotification {
+            thread_id: id.to_string(),
+            turn: turn(TurnStatus::Completed),
+        }),
+    );
+    assert_eq!(
+        state.describe(id, false, true).status,
+        AgentMonitorStatus::Running
+    );
     assert!(!state.is_successfully_completed(id));
-    state.observe(id, &ServerNotification::ThreadStatusChanged(ThreadStatusChangedNotification {
-        thread_id: id.to_string(), status: ThreadStatus::SystemError,
-    }));
-    assert_eq!(state.describe(id, false, false).status, AgentMonitorStatus::SystemError);
+    state.observe(
+        id,
+        &ServerNotification::ThreadStatusChanged(ThreadStatusChangedNotification {
+            thread_id: id.to_string(),
+            status: ThreadStatus::SystemError,
+        }),
+    );
+    assert_eq!(
+        state.describe(id, false, false).status,
+        AgentMonitorStatus::SystemError
+    );
 }

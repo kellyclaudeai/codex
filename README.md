@@ -1,3 +1,8 @@
+> **Native subagent visibility fork:** `/subagents` shows live status, model,
+> cumulative token usage, and current activity, with transcript navigation and
+> collapsible completed work. [Build and usage guide](SUBAGENT-VISIBILITY.md).
+> The upstream installation commands below install official Codex, not this fork.
+
 <p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.
 <p align="center">
   <img src="https://github.com/openai/codex/blob/main/.github/codex-cli-splash.png" alt="Codex CLI splash" width="80%" />
