@@ -8,9 +8,8 @@ part of the Codex interface and uses the existing session state.
 The view can show cumulative server token usage when the server reports it. If
 that information is unavailable, the token field is shown as unknown rather
 than inferred. The displayed tool class is the safe current class reported by
-the session. Enter opens navigation through the existing transcript. Input
-remains owned by the parent session, so selecting a child does not let the
-parent accidentally type into or mutate that child's input. Completed agents
+the session. Enter opens navigation through the existing transcript. Existing input permissions remain in force: parent-owned children are view-only;
+agents that accept direct input retain their existing follow-up behavior. Completed agents
 are hidden or shown with the completed toggle.
 
 This is currently a custom native Codex fork patch. It is not an official
@@ -48,6 +47,11 @@ just test -p codex-tui
 
 The command uses the repository's configured test runner and is the relevant
 check for the monitor UI.
+
+New children spawned during the connection stream updates without needing to
+select them first. Historical descendants discovered on reopening a session may
+have only status metadata until their transcript is attached. Unavailable usage
+is never inferred from transcript size.
 
 ## Contributing and distributing
 

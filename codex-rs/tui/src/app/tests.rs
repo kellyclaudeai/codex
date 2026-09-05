@@ -1,5 +1,8 @@
 //! App-level orchestration tests for the TUI.
 
+#[path = "tests/agent_monitor_picker.rs"]
+mod agent_monitor_picker;
+
 #[path = "tests/daybreak_tests.rs"]
 mod daybreak_tests;
 

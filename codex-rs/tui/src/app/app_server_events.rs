@@ -354,6 +354,8 @@ impl App {
                 {
                     return;
                 }
+                let selected_agent = self.agent_picker_selected_thread();
+                let monitor_changed = self.agent_navigation.monitor.observe(thread_id, &notification);
                 let result = if self.primary_thread_id == Some(thread_id)
                     || self.primary_thread_id.is_none()
                 {
@@ -365,6 +367,9 @@ impl App {
 
                 if let Err(err) = result {
                     tracing::warn!("failed to enqueue app-server notification: {err}");
+                }
+                if monitor_changed {
+                    self.repaint_agent_picker(selected_agent);
                 }
                 return;
             }

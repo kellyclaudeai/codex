@@ -2656,6 +2656,11 @@ impl App {
             } => {
                 self.apply_agent_picker_thread_refresh(primary_thread_id, request_id, result);
             }
+            AppEvent::ToggleCompletedAgents => {
+                let selected = self.agent_picker_selected_thread();
+                self.agent_navigation.show_completed = !self.agent_navigation.show_completed;
+                self.repaint_agent_picker(selected);
+            }
             AppEvent::SelectAgentThread(thread_id) => {
                 self.select_agent_thread_and_discard_side(tui, app_server, thread_id)
                     .await?;
