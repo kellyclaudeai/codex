@@ -1,0 +1,15 @@
+---
+source: tui/src/app/tests/agent_monitor_picker.rs
+assertion_line: 75
+expression: narrow
+---
+  Subagents
+  Live activity. Select an agent to watch.
+
+› 1. Worker
+     Failed · model unknown · tokens
+     unavailable
+
+  Tokens are cumulative usage reported by the
+  server.
+  Press enter to confirm or esc to go back

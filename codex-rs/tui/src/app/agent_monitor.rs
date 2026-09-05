@@ -89,7 +89,9 @@ impl AgentMonitorState {
         let entry = self.entries.entry(thread_id).or_default();
         if !entry.observed_live {
             entry.status = Some(status_from_thread(&thread.status));
-            if let Some(result) = thread
+            if matches!(thread.status, ThreadStatus::Active { .. } | ThreadStatus::SystemError) {
+                entry.latest_turn_result = None;
+            } else if let Some(result) = thread
                 .turns
                 .last()
                 .and_then(|turn| turn_result(&turn.status))
@@ -127,7 +129,7 @@ impl AgentMonitorState {
             ServerNotification::ThreadStatusChanged(changed) => {
                 entry.observed_live = true;
                 entry.status = Some(status_from_thread(&changed.status));
-                if matches!(&changed.status, ThreadStatus::Active { .. }) {
+                if matches!(&changed.status, ThreadStatus::Active { .. } | ThreadStatus::SystemError) {
                     entry.latest_turn_result = None;
                 }
             }
@@ -206,12 +208,12 @@ impl AgentMonitorState {
         fallback_closed: bool,
     ) -> AgentMonitorDescription {
         let entry = self.entries.get(&thread_id);
-        let status = if fallback_closed {
-            AgentMonitorStatus::Closed
-        } else if let Some(result) = entry.and_then(|entry| entry.latest_turn_result) {
+        let status = if let Some(result) = entry.and_then(|entry| entry.latest_turn_result) {
             status_from_result(result)
         } else if let Some(status) = entry.and_then(|entry| entry.status) {
             status
+        } else if fallback_closed {
+            AgentMonitorStatus::Closed
         } else if fallback_running {
             AgentMonitorStatus::Running
         } else {
@@ -316,7 +318,7 @@ fn bounded_label(value: &str) -> Option<String> {
     if value.is_empty() {
         return None;
     }
-    Some(value.chars().take(MAX_LABEL_CHARS).collect())
+    Some(value.chars().take(MAX_LABEL_CHARS).map(|ch| if ch.is_control() { ' ' } else { ch }).collect())
 }
 
 fn bounded_id(value: &str) -> u64 {

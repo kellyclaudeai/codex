@@ -1,0 +1,16 @@
+---
+source: tui/src/app/agent_monitor_tests.rs
+assertion_line: 148
+expression: "state.describe(thread_id, false, false)"
+---
+AgentMonitorDescription {
+    status: Failed,
+    latest_turn_result: Some(
+        Failed,
+    ),
+    total_tokens: Some(
+        12345,
+    ),
+    activity: None,
+    model: None,
+}
