@@ -23,11 +23,10 @@ Use the repository's current Rust toolchain. The Rust workspace also expects
 the CLI with:
 
 ```sh
-cargo build -p codex-cli -p codex-code-mode-host
+cargo build -p codex-cli
 ```
 
-Building the companion host preserves Code Mode support as well. Run the
-resulting development binary with:
+Run the resulting development binary with:
 
 ```sh
 target/debug/codex
@@ -37,6 +36,22 @@ If you install it alongside another Codex checkout, use a distinct executable
 name such as `codex-visibility` so the fork is easy to identify. Keep the
 installation choice local to your environment; this document does not assume
 a particular binary directory.
+
+## Companion runtime
+
+Code Mode uses the separate `codex-code-mode-host` executable. The source-build
+command is `cargo build -p codex-code-mode-host`, but this base revision's
+macOS V8 archive currently returns HTTP 404. That optional helper build is a
+separate upstream dependency issue; the native CLI builds successfully.
+
+The verified local installation copies the official Codex 0.153.4 package
+layout into an isolated directory and replaces only `bin/codex` with this
+fork's executable. Its official companion helper passed the current version-1
+stdio handshake, session open, JavaScript expression execution, and clean
+shutdown. Tool delegation, cancellation, and limits were not separately tested.
+Keep the package manifest and companion resources together when using this
+approach, and label the installation as a custom build. Source builds display
+`codex-cli 0.0.0`; identify the exact source commit separately.
 
 ## Test
 
@@ -77,3 +92,7 @@ related UI failures. Those baseline snapshots were not changed by this patch.
 The new coverage includes event-handler-driven updates while the picker is
 open, cumulative token replacement, stale completion handling, safe tool
 labels, completion folding, transcript selection, and narrow rendering.
+
+`just fix -p codex-tui` and `just fmt` passed. The compiled CLI was also launched
+interactively and its `/subagents` panel opened successfully. No model request
+was needed for these smoke checks.
