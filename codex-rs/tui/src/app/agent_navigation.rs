@@ -30,6 +30,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use uuid::Uuid;
 
+use super::agent_monitor::AgentMonitorState;
+
 /// Small state container for multi-agent picker ordering and labeling.
 ///
 /// `App` owns thread lifecycle and UI side effects. This type keeps the pure rules for stable
@@ -41,6 +43,10 @@ use uuid::Uuid;
 /// temporarily out of sync during teardown races.
 #[derive(Debug, Default)]
 pub(crate) struct AgentNavigationState {
+    /// Bounded live status retained independently of the replay event buffers.
+    pub(super) monitor: AgentMonitorState,
+    /// Whether successfully completed children are visible in the picker.
+    pub(super) show_completed: bool,
     /// Latest picker metadata for each tracked thread id.
     threads: HashMap<ThreadId, AgentPickerThreadEntry>,
     /// Stable first-seen traversal order for picker rows and keyboard cycling.
@@ -219,6 +225,8 @@ impl AgentNavigationState {
     /// This is used when `App` tears down thread event state and needs the picker cache to return
     /// to a pristine single-session state.
     pub(crate) fn clear(&mut self) {
+        self.monitor.clear();
+        self.show_completed = false;
         self.threads.clear();
         self.order.clear();
         self.stopped_threads.clear();
@@ -232,6 +240,7 @@ impl AgentNavigationState {
     /// replayable local threads. Keeping those around after the backend confirms they are gone
     /// would leave ghost rows in `/subagents`.
     pub(crate) fn remove(&mut self, thread_id: ThreadId) {
+        self.monitor.remove(thread_id);
         self.threads.remove(&thread_id);
         self.order.retain(|candidate| *candidate != thread_id);
         self.stopped_threads.remove(&thread_id);

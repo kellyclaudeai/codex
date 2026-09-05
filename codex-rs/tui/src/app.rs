@@ -202,6 +202,7 @@ use tokio::task::JoinHandle;
 use toml::Value as TomlValue;
 use uuid::Uuid;
 mod agent_message_consolidation;
+mod agent_monitor;
 mod agent_navigation;
 mod agent_picker;
 mod agent_status_feed;
