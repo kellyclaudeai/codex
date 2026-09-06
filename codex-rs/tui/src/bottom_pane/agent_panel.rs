@@ -43,15 +43,11 @@ impl AgentPanel {
 
         let previous_index = self
             .selected_thread_id
-            .and_then(|selected| {
-                self.rows
-                    .iter()
-                    .position(|row| row.thread_id == selected)
-            })
+            .and_then(|selected| self.rows.iter().position(|row| row.thread_id == selected))
             .unwrap_or(0);
-        let selected_thread_id = self.selected_thread_id.filter(|selected| {
-            rows.iter().any(|row| row.thread_id == *selected)
-        });
+        let selected_thread_id = self
+            .selected_thread_id
+            .filter(|selected| rows.iter().any(|row| row.thread_id == *selected));
 
         self.rows = rows;
         self.selected_thread_id = selected_thread_id.or_else(|| {
@@ -84,6 +80,7 @@ impl AgentPanel {
 
     pub(crate) fn handle_key_event(&mut self, key_event: KeyEvent) -> AgentPanelAction {
         if !self.focused
+            || !key_event.modifiers.is_empty()
             || !matches!(key_event.kind, KeyEventKind::Press | KeyEventKind::Repeat)
         {
             return AgentPanelAction::Ignored;
@@ -121,12 +118,10 @@ impl AgentPanel {
 
     fn selected_index(&self) -> Option<usize> {
         let selected = self.selected_thread_id?;
-        self.rows
-            .iter()
-            .position(|row| row.thread_id == selected)
+        self.rows.iter().position(|row| row.thread_id == selected)
     }
 
-    fn render_lines(&self, height: u16) -> Vec<Line<'static>> {
+    fn render_lines(&self, width: u16, height: u16) -> Vec<Line<'static>> {
         if self.rows.is_empty() || height == 0 {
             return Vec::new();
         }
@@ -136,7 +131,10 @@ impl AgentPanel {
         } else {
             "  ↓ browse  /subagents all"
         };
-        let mut lines = vec![Line::from(vec!["  Active agents".bold(), hint.dim()])];
+        let mut lines = vec![Line::from(vec![
+            format!("  Active agents ({})", self.rows.len()).bold(),
+            hint.dim(),
+        ])];
         let visible_rows = MAX_VISIBLE_ROWS.min(usize::from(height.saturating_sub(1)));
         if visible_rows == 0 {
             return lines;
@@ -149,11 +147,19 @@ impl AgentPanel {
 
         for (index, row) in self.rows.iter().enumerate().skip(start).take(visible_rows) {
             let selected = self.focused && index == selected_index;
-            let marker = if selected { "› ".cyan().bold() } else { "  ".into() };
-            let name = if selected {
-                row.name.clone().cyan().bold()
+            let marker = if selected {
+                "› ".cyan().bold()
             } else {
-                row.name.clone().into()
+                "  ".into()
+            };
+            let label = crate::text_formatting::truncate_text(
+                &row.name,
+                usize::from((width / 3).clamp(8, 28)),
+            );
+            let name = if selected {
+                label.cyan().bold()
+            } else {
+                label.into()
             };
             lines.push(Line::from(vec![
                 marker,
@@ -170,7 +176,7 @@ impl Renderable for AgentPanel {
         if area.is_empty() {
             return;
         }
-        Paragraph::new(self.render_lines(area.height)).render(area, buf);
+        Paragraph::new(self.render_lines(area.width, area.height)).render(area, buf);
     }
 
     fn desired_height(&self, width: u16) -> u16 {

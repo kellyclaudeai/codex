@@ -201,6 +201,7 @@ use tokio::sync::mpsc::unbounded_channel;
 use tokio::task::JoinHandle;
 use toml::Value as TomlValue;
 use uuid::Uuid;
+mod active_agent_panel;
 mod agent_message_consolidation;
 mod agent_monitor;
 mod agent_navigation;

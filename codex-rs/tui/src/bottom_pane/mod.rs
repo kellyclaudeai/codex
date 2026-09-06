@@ -13,6 +13,8 @@
 //!
 //! Some UI is time-based rather than input-based, such as the transient "press again to quit"
 //! hint. The pane schedules redraws so those hints can expire even when the UI is otherwise idle.
+//! Active agents stay beneath the composer. Plain Down on an empty draft enters
+//! that panel; its focus routing runs before ChatWidget interrupt shortcuts.
 //! Inline banners sit above the composer. Number shortcuts apply only to an empty, idle composer;
 //! drafts, paste bursts, and active dialogs keep their normal input routing.
 use std::collections::VecDeque;
@@ -61,6 +63,8 @@ use std::time::Instant;
 
 mod action_required_title;
 mod actionable_banner;
+pub(crate) mod agent_panel;
+mod agent_panel_routing;
 mod app_link_view;
 mod apply_patch_header;
 mod approval_overlay;
@@ -243,6 +247,8 @@ pub(crate) struct BottomPane {
     /// Composer is retained even when a BottomPaneView is displayed so the
     /// input state is retained when the view is closed.
     composer: ChatComposer,
+    agent_panel: agent_panel::AgentPanel,
+    agent_panel_return_thread: Option<ThreadId>,
 
     /// Stack of views displayed instead of the composer (e.g. popups/modals).
     view_stack: Vec<Box<dyn BottomPaneView>>,
@@ -327,6 +333,8 @@ impl BottomPane {
         composer.set_skill_mentions(skills);
         Self {
             composer,
+            agent_panel: agent_panel::AgentPanel::default(),
+            agent_panel_return_thread: None,
             view_stack: Vec::new(),
             questions: None,
             delayed_approval_requests: VecDeque::new(),
@@ -874,6 +882,7 @@ impl BottomPane {
     }
 
     pub fn handle_paste(&mut self, pasted: String) {
+        self.agent_panel.unfocus();
         if self.view_stack.is_empty()
             && let Some(questions) = self.questions.as_mut().filter(|q| q.expanded)
         {
@@ -2053,15 +2062,19 @@ impl BottomPane {
             flex2.push(/*flex*/ 1, RenderableItem::Owned(flex.into()));
             let composer: RenderableItem<'_> = if let Some(questions) = question_editor {
                 RenderableItem::Borrowed(questions.as_ref())
-            } else if composer_right_reserve == 0 {
+            } else if composer_right_reserve == 0 && !self.agent_panel.is_focused() {
                 RenderableItem::Borrowed(&self.composer)
             } else {
                 RenderableItem::Owned(Box::new(ChatComposerRightReserveRenderable {
                     composer: &self.composer,
                     right_reserve: composer_right_reserve,
+                    hide_cursor: self.agent_panel.is_focused(),
                 }))
             };
             flex2.push(/*flex*/ 0, composer);
+            if question_editor.is_none() && !self.composer.popup_active() {
+                flex2.push(/*flex*/ 0, RenderableItem::Borrowed(&self.agent_panel));
+            }
             RenderableItem::Owned(Box::new(flex2))
         }
     }
@@ -2110,6 +2123,7 @@ impl BottomPane {
 struct ChatComposerRightReserveRenderable<'a> {
     composer: &'a chat_composer::ChatComposer,
     right_reserve: u16,
+    hide_cursor: bool,
 }
 
 impl Renderable for ChatComposerRightReserveRenderable<'_> {
@@ -2128,6 +2142,9 @@ impl Renderable for ChatComposerRightReserveRenderable<'_> {
     }
 
     fn cursor_pos(&self, area: Rect) -> Option<(u16, u16)> {
+        if self.hide_cursor {
+            return None;
+        }
         self.composer
             .cursor_pos_with_textarea_right_reserve(area, self.right_reserve)
     }
@@ -2157,6 +2174,8 @@ impl Renderable for BottomPane {
 mod tests {
     #[path = "actionable_banner_tests.rs"]
     mod actionable_banner_tests;
+    #[path = "agent_panel_routing_tests.rs"]
+    mod agent_panel_routing_tests;
 
     use super::*;
     use crate::app::app_server_requests::ResolvedAppServerRequest;

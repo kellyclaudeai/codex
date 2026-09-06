@@ -1,0 +1,10 @@
+---
+source: tui/src/app/tests/active_agent_panel.rs
+assertion_line: 23
+expression: rendered
+---
+› Ask Codex to do anything
+
+  gpt-5.6-sol default · /tmp/project
+  Active agents (1)  ↓ browse  /subagents all
+  Research  Running · 10 tokens · model unknown

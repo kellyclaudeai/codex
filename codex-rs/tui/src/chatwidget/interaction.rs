@@ -13,7 +13,22 @@ impl ChatWidget {
         self.bottom_pane.keymap_contexts()
     }
 
+    pub(crate) fn set_active_agent_panel(
+        &mut self,
+        rows: Vec<crate::bottom_pane::agent_panel::AgentPanelRow>,
+        return_thread: Option<ThreadId>,
+    ) {
+        self.bottom_pane.set_active_agent_panel(rows, return_thread);
+    }
+
+    pub(crate) fn handle_agent_panel_key(&mut self, key_event: KeyEvent) -> bool {
+        self.bottom_pane.handle_agent_panel_key(key_event)
+    }
+
     pub(crate) fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if self.handle_agent_panel_key(key_event) {
+            return;
+        }
         if self.handle_question_key(key_event) {
             return;
         }

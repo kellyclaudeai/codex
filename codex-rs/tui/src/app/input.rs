@@ -381,6 +381,11 @@ impl App {
             return;
         }
 
+        if self.chat_widget.handle_agent_panel_key(key_event) {
+            self.reset_backtrack_state();
+            return;
+        }
+
         if matches!(key_event.code, KeyCode::Esc)
             && matches!(key_event.kind, KeyEventKind::Press | KeyEventKind::Repeat)
         {

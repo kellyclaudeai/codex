@@ -42,16 +42,19 @@ fn renders_persistent_and_focused_states() {
         row(2, "tests", "waiting"),
     ]);
 
-    insta::assert_snapshot!(snapshot(&panel, 52, panel.desired_height(52)), @r"
-      Active agents  ↓ browse  /subagents all
+    insta::assert_snapshot!(snapshot(&panel, 60, panel.desired_height(60)), @r"
+      Active agents (2)  ↓ browse  /subagents all
       research  running
       tests  waiting
     ");
 
     panel.focus();
-    assert_eq!(panel.handle_key_event(key(KeyCode::Down)), AgentPanelAction::Consumed);
-    insta::assert_snapshot!(snapshot(&panel, 52, panel.desired_height(52)), @r"
-      Active agents  ↑↓ navigate  enter open  esc prompt
+    assert_eq!(
+        panel.handle_key_event(key(KeyCode::Down)),
+        AgentPanelAction::Consumed
+    );
+    insta::assert_snapshot!(snapshot(&panel, 60, panel.desired_height(60)), @r"
+      Active agents (2)  ↑↓ navigate  enter open  esc prompt
       research  running
     › tests  waiting
     ");
@@ -67,12 +70,15 @@ fn caps_rows_and_scrolls_to_selection() {
     );
     panel.focus();
     for _ in 0..7 {
-        assert_eq!(panel.handle_key_event(key(KeyCode::Down)), AgentPanelAction::Consumed);
+        assert_eq!(
+            panel.handle_key_event(key(KeyCode::Down)),
+            AgentPanelAction::Consumed
+        );
     }
 
     assert_eq!(panel.desired_height(/*width*/ 60), 7);
     insta::assert_snapshot!(snapshot(&panel, 60, panel.desired_height(60)), @r"
-      Active agents  ↑↓ navigate  enter open  esc prompt
+      Active agents (8)  ↑↓ navigate  enter open  esc prompt
       agent-3  running
       agent-4  running
       agent-5  running
@@ -87,9 +93,15 @@ fn keyboard_selects_and_returns_to_prompt() {
     let mut panel = AgentPanel::default();
     panel.set_rows(vec![row(1, "one", "running"), row(2, "two", "waiting")]);
 
-    assert_eq!(panel.handle_key_event(key(KeyCode::Down)), AgentPanelAction::Ignored);
+    assert_eq!(
+        panel.handle_key_event(key(KeyCode::Down)),
+        AgentPanelAction::Ignored
+    );
     panel.focus();
-    assert_eq!(panel.handle_key_event(key(KeyCode::Down)), AgentPanelAction::Consumed);
+    assert_eq!(
+        panel.handle_key_event(key(KeyCode::Down)),
+        AgentPanelAction::Consumed
+    );
     assert_eq!(
         panel.handle_key_event(key(KeyCode::Enter)),
         AgentPanelAction::Select(id(2))
@@ -128,5 +140,8 @@ fn updates_preserve_or_safely_clamp_selection() {
     assert_eq!(panel.desired_height(/*width*/ 60), 0);
     assert!(panel.is_empty());
     assert!(!panel.is_focused());
-    assert_eq!(panel.handle_key_event(key(KeyCode::Enter)), AgentPanelAction::Ignored);
+    assert_eq!(
+        panel.handle_key_event(key(KeyCode::Enter)),
+        AgentPanelAction::Ignored
+    );
 }

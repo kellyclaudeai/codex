@@ -1,6 +1,7 @@
-> **Native subagent visibility fork:** `/subagents` shows live status, model,
-> cumulative token usage, and current activity, with transcript navigation and
-> collapsible completed work. [Build and usage guide](SUBAGENT-VISIBILITY.md).
+> **Native subagent visibility fork:** running and waiting agents stay visible
+> beneath the prompt with status and token usage. Down Arrow focuses the list,
+> Enter opens a transcript, and `/subagents` shows the full history.
+> [Build and usage guide](SUBAGENT-VISIBILITY.md).
 > The upstream installation commands below install official Codex, not this fork.
 
 <p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.

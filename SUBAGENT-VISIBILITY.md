@@ -1,16 +1,23 @@
 # Subagent visibility monitor
 
-This fork includes a native Codex TUI monitor for parallel subagents. It is
-opened with `/subagents` and shows each child agent's explicit status, with an
-optional toggle for completed agents. The monitor has no tmux dependency: it is
-part of the Codex interface and uses the existing session state.
+This fork adds a persistent active-agent list beneath the Codex prompt. It
+appears automatically while child agents are running or waiting, and disappears
+when none are active. Completed, idle, failed, and closed agents are excluded
+from that list. `/subagents` opens the full session list, including older work.
+There is no tmux dependency.
 
-The view can show cumulative server token usage when the server reports it. If
-that information is unavailable, the token field is shown as unknown rather
-than inferred. The displayed tool class is the safe current class reported by
-the session. Enter opens navigation through the existing transcript. Existing input permissions remain in force: parent-owned children are view-only;
-agents that accept direct input retain their existing follow-up behavior. Completed agents
-are hidden or shown with the completed toggle.
+- Down Arrow from an empty prompt focuses the active list.
+- Up/Down selects an agent; Enter opens its existing live transcript.
+- Esc leaves the list. From an inspected agent's empty prompt, Esc returns to
+  the primary conversation without interrupting the agent.
+- Typing or pasting returns focus to the composer. Drafts, multiline editing,
+  popups, and approval dialogs retain their normal input behavior.
+- At most six agent rows are shown at once, with scrolling and a total count.
+
+Rows show status, cumulative server-reported tokens, model, and safe current
+activity. Unavailable metrics are labeled rather than inferred. Existing input
+permissions remain in force: parent-owned children are view-only, while agents
+that accept direct input retain their existing follow-up behavior.
 
 This is currently a custom native Codex fork patch. It is not an official
 Codex plugin, and this guide makes no claim that upstream Codex supports the
@@ -85,13 +92,15 @@ accepted.
 
 ## Validation
 
-On macOS arm64, the modified TUI suite ran 4,295 tests: 4,284 passed and 11
-failed, with 6 skipped. All seven added monitor tests passed. The unchanged
+On macOS arm64, the modified TUI suite ran 4,302 tests: 4,291 passed and 11
+failed, with 6 skipped. All fourteen added monitor and persistent-panel tests passed. The unchanged
 upstream base (`e01f38c`) reproduced exactly the same 11 keyboard/cursor and
 related UI failures. Those baseline snapshots were not changed by this patch.
 The new coverage includes event-handler-driven updates while the picker is
 open, cumulative token replacement, stale completion handling, safe tool
-labels, completion folding, transcript selection, and narrow rendering.
+labels, completion folding, transcript selection, and narrow rendering. Persistent-panel coverage also checks active-only filtering,
+full-list access, app-level Down/Enter/Esc routing, draft and paste handling,
+scrolling, and selection preservation.
 
 `just fix -p codex-tui` and `just fmt` passed. The compiled CLI was also launched
 interactively and its `/subagents` panel opened successfully. No model request

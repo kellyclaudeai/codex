@@ -1,5 +1,7 @@
 //! App-level orchestration tests for the TUI.
 
+#[path = "tests/active_agent_panel.rs"]
+mod active_agent_panel;
 #[path = "tests/agent_monitor_picker.rs"]
 mod agent_monitor_picker;
 

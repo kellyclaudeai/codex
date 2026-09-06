@@ -47,6 +47,7 @@ impl App {
     }
 
     pub(super) fn repaint_agent_picker(&mut self, selected_thread: Option<ThreadId>) {
+        self.sync_active_agent_panel();
         let Some(previous_index) = self
             .chat_widget
             .selected_index_for_present_view(AGENT_PICKER_VIEW_ID)
